@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,11 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF } from "react-icons/fa";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { useAppDispatch } from "@/redux/hooks";
+import { useLoginMutation } from "@/redux/features/auth/authApi";
+import { verifyToken } from "@/utils/verifyToken";
+import { setUser } from "@/redux/features/auth/authSlice";
 
 interface FormData {
   email: string;
@@ -15,15 +20,41 @@ interface FormData {
 }
 
 export default function LoginForm() {
+  const dispatch = useAppDispatch();
+  const [login, { isLoading }] = useLoginMutation();
   const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>();
+  const navigate = useNavigate(); // 🛠️ Initialize useNavigate
+  const onSubmit = async (data: FormData) => {
+    const userInfo = {
+      email: data.email,
+      password: data.password,
+    };
 
-  const onSubmit = (data: FormData) => {
-    console.log("Form data:", data);
+    console.log("Form data:", userInfo);
+
+    try {
+      const res = await login(userInfo).unwrap();
+
+      const user = verifyToken(res.token as string);
+      console.log({ ...user, ...res?.data });
+
+      dispatch(
+        setUser({
+          user: { ...user, ...res?.data },
+          token: res.data.accessToken,
+        })
+      );
+
+      // ✅ Login Success - Navigate to Home Page
+      navigate("/");
+    } catch (error) {
+      console.error("Login Failed:", error);
+    }
   };
 
   return (
@@ -129,14 +160,24 @@ export default function LoginForm() {
               </label>
             </div>
 
-            <Button type="submit" className="w-full">
-              LOG IN
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>
+                  Loading...
+                </div>
+              ) : (
+                "LOG IN"
+              )}
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground">
             No Account yet?{" "}
-            <a href="#" className="font-semibold text-primary hover:underline">
+            <a
+              href="/signup"
+              className="font-semibold text-primary hover:underline"
+            >
               SIGN UP
             </a>
           </p>

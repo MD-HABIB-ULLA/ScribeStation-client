@@ -44,7 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 ${position}-0 w-[290px] h-full bg-white z-50 shadow-lg transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 ${position}-0 w-[290px] h-screen flex flex-col bg-white z-50 shadow-lg transform transition-transform duration-300 ease-in-out ${
           isOpen
             ? "translate-x-0"
             : position === "left"
@@ -66,7 +66,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           </button>
           <div className="text-base font-bold">{title}</div>
         </div>
-        <div className="p-2 mt-6 overflow-y-auto h-full">{children}</div>
+        <div className="p-2 mt-6 overflow-y-auto flex-1 ">{children}</div>
       </div>
     </>
   );

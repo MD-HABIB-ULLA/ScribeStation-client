@@ -3,7 +3,7 @@ import BigSlider from "./BigSlider";
 const Banner = () => {
   return (
     <div
-      style={{ backgroundImage: "url(/images/bannerbg.webp)" }}
+      style={{ backgroundImage: "url(/images/banner.jpg)" }}
       className="lg:h-[600px] h-auto bg-cover bg-center bg-no-repeat"
     >
       <div className="h-full w-full container m-auto py-16 px-4">

@@ -1,30 +1,95 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, X } from "lucide-react"; // Added X icon for the remove button
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF } from "react-icons/fa";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import toast from "react-hot-toast";
+import { useRegisterUserMutation } from "@/redux/features/auth/authApi";
 
 interface FormData {
   name: string;
   email: string;
   password: string;
-  rememberMe: boolean;
+  image?: string; // Base64 string
 }
+
+type ErrorSource = {
+  path: string;
+  message: string;
+};
+
+type ErrorResponse = {
+  success: boolean;
+  message: string;
+  errorSources: ErrorSource[];
+  stack?: string;
+};
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const [registerUser, { isLoading }] = useRegisterUserMutation();
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<FormData>();
+  const navigate = useNavigate();
 
-  const onSubmit = (data: FormData) => {
-    console.log("Form data:", data);
+  const onSubmit = async (data: FormData) => {
+    try {
+      const response = await registerUser(data).unwrap();
+      console.log("User registered successfully:", response);
+  
+      if (response.success) {
+        toast.success(response.message);
+        navigate("/login");
+      } else {
+        toast.error(response.message);
+      }
+    } catch (err: unknown) {
+      // Check if err is of type ErrorResponse
+      if (typeof err === "object" && err !== null && "message" in err) {
+        const errorResponse = err as ErrorResponse;
+        console.error("Error Message:", errorResponse.message);
+  
+        // Show first error message from errorSources (if available)
+        if (errorResponse.errorSources?.length) {
+          toast.error(errorResponse.errorSources[0].message);
+        } else {
+          toast.error(errorResponse.message);
+        }
+      } else {
+        console.error("An unexpected error occurred", err);
+        toast.error("Something went wrong!");
+      }
+    }
+  };
+  
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setImagePreview(base64String);
+        setValue("image", base64String); // Store in form state
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    setValue("image", ""); // Clear the image from form state
   };
 
   return (
@@ -43,25 +108,17 @@ export default function SignUpForm() {
         <div className="w-full max-w-md space-y-8">
           <div className="text-center flex items-center justify-center">
             <Link to={"/"}>
-              <img src="/images/logofull.png" className="h-10" alt="" />
-            </Link>{" "}
+              <img src="/images/logofull.png" className="h-10" alt="Logo" />
+            </Link>
           </div>
 
           {/* Social Login Buttons */}
           <div className="grid md:gap-4 gap-2 md:grid-cols-2 grid-cols-1">
-            <Button
-              variant="outline"
-              className="w-full text-xs md:text-sm"
-              type="button"
-            >
+            <Button variant="outline" className="w-full text-xs md:text-sm">
               <FcGoogle color="#1877F2" size={5} />
               Log in with Google
             </Button>
-            <Button
-              variant="outline"
-              className="w-full text-xs md:text-sm"
-              type="button"
-            >
+            <Button variant="outline" className="w-full text-xs md:text-sm">
               <FaFacebookF size={5} />
               Log in with Facebook
             </Button>
@@ -79,11 +136,12 @@ export default function SignUpForm() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+            {/* Name */}
             <div className="md:space-y-2 space-y-1">
               <Input
                 {...register("name", { required: true })}
-                type="name"
-                placeholder="Name "
+                type="text"
+                placeholder="Name"
                 className="w-full md:text-sm text-xs"
               />
               {errors.name && (
@@ -92,11 +150,13 @@ export default function SignUpForm() {
                 </p>
               )}
             </div>
+
+            {/* Email */}
             <div className="md:space-y-2 space-y-1">
               <Input
                 {...register("email", { required: true })}
                 type="email"
-                placeholder="Email "
+                placeholder="Email"
                 className="w-full md:text-sm text-xs"
               />
               {errors.email && (
@@ -106,6 +166,7 @@ export default function SignUpForm() {
               )}
             </div>
 
+            {/* Password */}
             <div className="md:space-y-2 space-y-1">
               <div className="relative">
                 <Input
@@ -117,7 +178,7 @@ export default function SignUpForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute  md:text-sm text-xs right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -127,14 +188,58 @@ export default function SignUpForm() {
                 </button>
               </div>
               {errors.password && (
-                <p className=" text-red-500 md:text-sm text-xs">
+                <p className="text-red-500 md:text-sm text-xs">
                   Password is required
                 </p>
               )}
             </div>
 
+            {/* Image Upload */}
+            <div className="md:space-y-2 space-y-1">
+              <label className="md:text-sm text-xs font-medium">
+                Upload Profile Image
+              </label>
+              <div className="flex items-center gap-4">
+                <label
+                  htmlFor="image-upload"
+                  className="flex items-center justify-center w-24 h-24 border-2 border-dashed border-primary rounded-lg cursor-pointer hover:border-primary/90"
+                >
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-24 h-24 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-sm hover:bg-gray-100"
+                      >
+                        <X className="h-4 w-4 text-primary" />
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-gray-500 text-xs text-center">
+                      Click to upload
+                    </span>
+                  )}
+                </label>
+                {!imagePreview && (
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Remember Me */}
             <div className="flex items-center space-x-2">
-              <Checkbox {...register("rememberMe")} id="rememberMe" />
+              <Checkbox id="rememberMe" />
               <label
                 htmlFor="rememberMe"
                 className="md:text-sm text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -143,15 +248,26 @@ export default function SignUpForm() {
               </label>
             </div>
 
-            <Button type="submit" className="w-full">
-              LOG IN
+            {/* Submit Button */}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>
+                  Loading...
+                </div>
+              ) : (
+                "LOG IN"
+              )}
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground">
-            No Account yet?{" "}
-            <a href="#" className="font-semibold text-primary hover:underline">
-              SIGN UP
+            Already have an account?{" "}
+            <a
+              href="/login"
+              className="font-semibold text-primary hover:underline"
+            >
+              LOG IN
             </a>
           </p>
         </div>

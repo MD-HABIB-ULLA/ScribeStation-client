@@ -1,11 +1,25 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import NoicyBg from "@/components/common/bg/NoicyBg";
 import HorizontalCard from "@/components/common/ProductCards/HorizontalCard";
 import Sidebar from "@/components/common/Sidebar/Sidebar";
+import { RootState } from "@/redux/store";
 
 import { useEffect, useState } from "react";
 import { FiHeart, FiShoppingCart, FiUser } from "react-icons/fi";
+import { useSelector } from "react-redux";
 import { Link } from "react-router";
-
+import { ShoppingCart, Heart, Package, LogOut, User } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { logout } from "@/redux/features/auth/authSlice";
+import toast from "react-hot-toast";
+function MenuItem({ icon: Icon, text }: { icon: any; text: string }) {
+  return (
+    <li className="flex items-center space-x-3 p-2 hover:bg-slate-500/20 text-foreground rounded-lg cursor-pointer">
+      <Icon className="w-5 h-5" />
+      <span>{text}</span>
+    </li>
+  );
+}
 const HeaderMain = () => {
   const placeholders: string[] = [
     "Books...",
@@ -16,7 +30,8 @@ const HeaderMain = () => {
   ];
   const [placeholderIndex, setPlaceholderIndex] = useState<number>(0);
   const [isOpenCartItem, setIsOpenCartItem] = useState(false);
-
+  const [isProfileInfoOpen, setIsProfileInfoOpen] = useState(false);
+  const dispatch = useDispatch();
   useEffect(() => {
     const interval = setInterval(() => {
       setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
@@ -24,6 +39,14 @@ const HeaderMain = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  const user = useSelector((state: RootState) => state.auth.user);
+  console.log(user);
+  const handleLogout = () => {
+    dispatch(logout());
+    setIsProfileInfoOpen(false);
+    toast.success("User logged out")
+  };
 
   return (
     <>
@@ -79,17 +102,30 @@ const HeaderMain = () => {
                   </span>
                 </div>
 
-                <Link
-                  to="/login"
-                  className="flex items-center gap-1 rounded-full  md:border"
-                >
-                  <div className="flex items-center justify-center bg-white border rounded-full md:p-2 p-1 ">
-                    <FiUser size={22} />
+                {user ? (
+                  <div
+                    onClick={() => setIsProfileInfoOpen(true)}
+                    className="flex items-center justify-center bg-white border rounded-full "
+                  >
+                    <img
+                      src={user?.image || "/images/default-avatar.png"}
+                      alt="User Avatar"
+                      className="w-8 h-8 rounded-full"
+                    />
                   </div>
-                  <div className="md:flex hidden items-center justify-center bg-transparent text-foreground pr-2 hoverText">
-                    Login
-                  </div>
-                </Link>
+                ) : (
+                  <Link
+                    to="/login"
+                    className="flex items-center gap-1 rounded-full  md:border"
+                  >
+                    <div className="flex items-center justify-center bg-white border rounded-full md:p-2 p-1 ">
+                      <FiUser size={22} />
+                    </div>
+                    <div className="md:flex hidden items-center justify-center bg-transparent text-foreground pr-2 hoverText">
+                      Login
+                    </div>
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -103,10 +139,53 @@ const HeaderMain = () => {
         position="right"
       >
         <div>
-      
           <div className="space-y-2">
             <HorizontalCard />
           </div>
+        </div>
+      </Sidebar>
+      <Sidebar
+        isOpen={isProfileInfoOpen}
+        title="Profile"
+        onClose={() => setIsProfileInfoOpen(false)}
+        position="right"
+      >
+        <div className="  text-foreground flex flex-col  h-full ">
+          {/* User Profile */}
+          <div className="flex items-center space-x-3 p-4">
+            {user && (
+              <div className="flex items-center justify-center bg-white border rounded-full ">
+                <img
+                  src={user?.image || "/images/default-avatar.png"}
+                  alt="User Avatar"
+                  className="w-10 h-10 rounded-full"
+                />
+              </div>
+            )}
+            <div>
+              <h2 className="text-lg font-semibold">{user?.name}</h2>
+              <p className="text-sm text-gray-400">{user?.email}</p>
+            </div>
+          </div>
+
+          {/* Menu Items */}
+          <nav className="flex-1 mt-6">
+            <ul className="space-y-2">
+              <MenuItem icon={User} text="Profile" />
+              <MenuItem icon={ShoppingCart} text="My Cart" />
+              <MenuItem icon={Heart} text="Wishlist" />
+              <MenuItem icon={Package} text="My Orders" />
+            </ul>
+          </nav>
+
+          {/* Logout Button */}
+          <button
+            onClick={() => handleLogout()}
+            className="flex items-center justify-center w-full py-2 mt-auto bg-red-600 hover:bg-red-700 text-white rounded-lg"
+          >
+            <LogOut className="w-5 h-5 mr-2" />
+            Logout
+          </button>
         </div>
       </Sidebar>
     </>
