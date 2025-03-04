@@ -36,7 +36,7 @@ const ScrollToTopButton = () => {
  
         <button
           onClick={scrollToTop}
-          className={`fixed md:bottom-10 bottom-16 md:right-10 right-5 p-3 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition duration-300 ${showButton? "scale-100" : "scale-0"}`}
+          className={`fixed md:bottom-10 z-50 bottom-16 md:right-10 right-5 p-3 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition duration-300 ${showButton? "scale-100" : "scale-0"}`}
         >
           <FaAnglesUp />
         </button>

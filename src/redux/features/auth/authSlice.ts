@@ -17,11 +17,13 @@ interface IUser {
 type TAuthState = {
   user: IUser | null;
   token: string | null;
+  role : "admin" | "customer"
 };
 
 const initialState: TAuthState = {
   user: null,
   token: null,
+  role: "customer",
 };
 
 const authSlice = createSlice({
@@ -31,11 +33,14 @@ const authSlice = createSlice({
     setUser: (state, action) => {
       const { user, token } = action.payload;
       state.user = user;
+      state.role = user.role;
       state.token = token;
+
     },
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.role = "customer";
     },
   },
 });

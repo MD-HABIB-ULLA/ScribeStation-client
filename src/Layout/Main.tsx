@@ -6,7 +6,7 @@ import { Outlet } from "react-router";
 const Main = () => {
   return (
     <div className=" min-h-screen ">
-      <Toaster position="top-center" reverseOrder={false} />
+      <Toaster position="top-right" reverseOrder={false} />
       <Header />
       <div className="">
         <Outlet />

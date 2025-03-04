@@ -5,12 +5,12 @@ const navItems = [
   { icon: Home, label: "Home", href: "/" },
   { icon: ShoppingBag, label: "Products", href: "/products" },
   { icon: Info, label: "About", href: "/about" },
-  { icon: Phone, label: "Contact", href: "/contact" },
+  { icon: Phone, label: "Contact", href: "/contacts" },
 ];
 
 export function BottomNavBar() {
   return (
-    <nav className="fixed md:hidden block bottom-0 left-0 right-0 bg-white border-t  shadow-lg">
+    <nav className="fixed md:hidden block bottom-0 left-0 right-0 bg-white z-50  border-t  shadow-lg">
       <ul className="flex justify-around items-center h-14">
         {navItems.map((item) => (
           <li key={item.label}>

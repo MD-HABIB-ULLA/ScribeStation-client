@@ -12,6 +12,7 @@ import { useAppDispatch } from "@/redux/hooks";
 import { useLoginMutation } from "@/redux/features/auth/authApi";
 import { verifyToken } from "@/utils/verifyToken";
 import { setUser } from "@/redux/features/auth/authSlice";
+import toast from "react-hot-toast";
 
 interface FormData {
   email: string;
@@ -47,18 +48,20 @@ export default function LoginForm() {
         setUser({
           user: { ...user, ...res?.data },
           token: res.data.accessToken,
+          role: res.data.role,
         })
       );
 
       // ✅ Login Success - Navigate to Home Page
       navigate("/");
+      toast.success("login successful");
     } catch (error) {
       console.error("Login Failed:", error);
     }
   };
 
   return (
-    <div className="grid lg:grid-cols-2 min-h-screen">
+    <div className="grid lg:grid-cols-2 min-h-screen ">
       {/* Left side - Image */}
       <div className="hidden lg:block relative">
         <img

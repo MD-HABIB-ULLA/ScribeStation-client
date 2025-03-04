@@ -8,7 +8,7 @@ export default function HorizontalCard() {
         {/* Image container */}
         <div className="relative h-24 w-24  flex-shrink-0 border rounded-lg overflow-hidden">
           <img
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-xq1lvu8S8BJQu8tw08eys2tQaj7DDI.png"
+            src="/images/cat1.webp"
             alt="Scenic waterfall in The Bahamas"
             className="h-full w-full object-cover object-left"
           />

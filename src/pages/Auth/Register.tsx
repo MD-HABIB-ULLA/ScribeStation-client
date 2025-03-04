@@ -3,38 +3,27 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, X } from "lucide-react"; // Added X icon for the remove button
+import { Eye, EyeOff, X } from "lucide-react";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF } from "react-icons/fa";
 import { Link, useNavigate } from "react-router";
 import toast from "react-hot-toast";
+import axios from "axios"; // Import axios for API requests
 import { useRegisterUserMutation } from "@/redux/features/auth/authApi";
 
 interface FormData {
   name: string;
   email: string;
   password: string;
-  image?: string; // Base64 string
+  image?: string; // Store Cloudinary image URL
 }
-
-type ErrorSource = {
-  path: string;
-  message: string;
-};
-
-type ErrorResponse = {
-  success: boolean;
-  message: string;
-  errorSources: ErrorSource[];
-  stack?: string;
-};
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-
   const [registerUser, { isLoading }] = useRegisterUserMutation();
+  const [loading, setLoading] = useState<boolean>(false);
   const {
     register,
     handleSubmit,
@@ -43,53 +32,75 @@ export default function SignUpForm() {
   } = useForm<FormData>();
   const navigate = useNavigate();
 
+  const uploadImageToCloudinary = async (
+    file: File
+  ): Promise<string | null> => {
+    setLoading(true);
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+    console.log("Cloud Name:", cloudName);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", import.meta.env.VITE_CLOUDINARY_API_KEY);
+      formData.append("upload_preset", "first_time");
+
+      const uploadResponse = await axios.post(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        formData
+      );
+      console.log("Upload Response:", uploadResponse.data);
+
+      if (uploadResponse.data?.secure_url) {
+        setLoading(false);
+        return uploadResponse.data.secure_url;
+      }
+      throw new Error("Cloudinary upload failed.");
+    } catch (error) {
+      console.error("Cloudinary Upload Error:", error);
+      toast.error("Failed to upload image!");
+      return null;
+    }
+  };
+
+  const handleImageChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+
+      const imageUrl = await uploadImageToCloudinary(file);
+      if (imageUrl) {
+        setValue("image", imageUrl);
+      }
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    setValue("image", "");
+  };
+
   const onSubmit = async (data: FormData) => {
+    console.log("Form Data with Image URL:", data);
+
     try {
       const response = await registerUser(data).unwrap();
       console.log("User registered successfully:", response);
-  
+
       if (response.success) {
         toast.success(response.message);
         navigate("/login");
       } else {
         toast.error(response.message);
       }
-    } catch (err: unknown) {
-      // Check if err is of type ErrorResponse
-      if (typeof err === "object" && err !== null && "message" in err) {
-        const errorResponse = err as ErrorResponse;
-        console.error("Error Message:", errorResponse.message);
-  
-        // Show first error message from errorSources (if available)
-        if (errorResponse.errorSources?.length) {
-          toast.error(errorResponse.errorSources[0].message);
-        } else {
-          toast.error(errorResponse.message);
-        }
-      } else {
-        console.error("An unexpected error occurred", err);
-        toast.error("Something went wrong!");
-      }
+    } catch (err) {
+      console.error("Registration error:", err);
+      toast.error("Registration failed!");
     }
-  };
-  
-
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setImagePreview(base64String);
-        setValue("image", base64String); // Store in form state
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRemoveImage = () => {
-    setImagePreview(null);
-    setValue("image", ""); // Clear the image from form state
   };
 
   return (
@@ -249,7 +260,11 @@ export default function SignUpForm() {
             </div>
 
             {/* Submit Button */}
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading || loading}
+            >
               {isLoading ? (
                 <div className="flex items-center justify-center">
                   <div className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>

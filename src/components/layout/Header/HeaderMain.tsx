@@ -12,6 +12,7 @@ import { ShoppingCart, Heart, Package, LogOut, User } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { logout } from "@/redux/features/auth/authSlice";
 import toast from "react-hot-toast";
+import { LuLayoutDashboard } from "react-icons/lu";
 function MenuItem({ icon: Icon, text }: { icon: any; text: string }) {
   return (
     <li className="flex items-center space-x-3 p-2 hover:bg-slate-500/20 text-foreground rounded-lg cursor-pointer">
@@ -41,12 +42,13 @@ const HeaderMain = () => {
   }, []);
 
   const user = useSelector((state: RootState) => state.auth.user);
-  console.log(user);
   const handleLogout = () => {
     dispatch(logout());
     setIsProfileInfoOpen(false);
-    toast.success("User logged out")
+    toast.success("User logged out");
   };
+
+  const role = useSelector((state: RootState) => state.auth.role);
 
   return (
     <>
@@ -105,7 +107,7 @@ const HeaderMain = () => {
                 {user ? (
                   <div
                     onClick={() => setIsProfileInfoOpen(true)}
-                    className="flex items-center justify-center bg-white border rounded-full "
+                    className="flex items-center justify-center  cursor-pointer bg-white border rounded-full "
                   >
                     <img
                       src={user?.image || "/images/default-avatar.png"}
@@ -141,6 +143,10 @@ const HeaderMain = () => {
         <div>
           <div className="space-y-2">
             <HorizontalCard />
+            <HorizontalCard />
+            <HorizontalCard />
+            <HorizontalCard />
+            <HorizontalCard />
           </div>
         </div>
       </Sidebar>
@@ -175,13 +181,17 @@ const HeaderMain = () => {
               <MenuItem icon={ShoppingCart} text="My Cart" />
               <MenuItem icon={Heart} text="Wishlist" />
               <MenuItem icon={Package} text="My Orders" />
+              <MenuItem icon={Package} text="My Orders" />
+              {role === "admin" && (
+                <MenuItem icon={LuLayoutDashboard} text="Dashboard  " />
+              )}
             </ul>
           </nav>
 
           {/* Logout Button */}
           <button
             onClick={() => handleLogout()}
-            className="flex items-center justify-center w-full py-2 mt-auto bg-red-600 hover:bg-red-700 text-white rounded-lg"
+            className="flex items-center justify-center  w-full py-2 mt-auto bg-red-600 hover:bg-red-700 text-white rounded-lg"
           >
             <LogOut className="w-5 h-5 mr-2" />
             Logout

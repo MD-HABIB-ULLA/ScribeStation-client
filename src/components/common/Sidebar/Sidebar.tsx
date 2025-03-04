@@ -37,14 +37,14 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
+          className="fixed inset-0 bg-black bg-opacity-50 z-[500] transition-opacity"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 ${position}-0 w-[290px] h-screen flex flex-col bg-white z-50 shadow-lg transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 ${position}-0 w-[290px] h-screen flex flex-col bg-white z-[1000] shadow-lg transform transition-transform duration-300 ease-in-out ${
           isOpen
             ? "translate-x-0"
             : position === "left"
